@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/beevik/prefixtree.svg?branch=master)](https://travis-ci.org/beevik/prefixtree)
+[![GoDoc](https://godoc.org/github.com/beevik/prefixtree?status.svg)](https://godoc.org/github.com/beevik/prefixtree)
+
 prefixtree
 ==========
 

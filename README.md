@@ -56,7 +56,7 @@ for _, prefix := range []string{
     "pear",
 } {
     data, err := tree.Find(prefix)
-    fmt.Printf("%-18s %-8v %v\n", s, data, err)
+    fmt.Printf("%-18s %-8v %v\n", prefix, data, err)
 }
 ```
 

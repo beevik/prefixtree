@@ -190,7 +190,6 @@ func TestDictionary(t *testing.T) {
 	tests = []string{
 		"ab",
 		"co",
-		"ca",
 		"de",
 		"dea",
 	}

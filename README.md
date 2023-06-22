@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/beevik/prefixtree.svg?branch=master)](https://travis-ci.org/beevik/prefixtree)
 [![GoDoc](https://godoc.org/github.com/beevik/prefixtree?status.svg)](https://godoc.org/github.com/beevik/prefixtree)
 
 prefixtree
@@ -10,13 +9,10 @@ prefix. The implementation allows the user to associate data with each
 string, so it can act as a sort of flexible key-value store where
 searches succeed with the shortest unambiguous key prefix.
 
-See http://godoc.org/github.com/beevik/prefixtree for godoc-formatted API
-documentation.
-
 ### Example: Building a prefix tree
 
-The following code adds strings and associated data (an integer) to
-a prefix tree.
+The following code adds strings and associated data (in this case an integer)
+to a prefix tree.
 
 ```go
 tree := prefixtree.New()

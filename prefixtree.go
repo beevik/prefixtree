@@ -73,10 +73,10 @@ outerLoop:
 			}
 		}
 
-		// Figure out which links to consider. Do a binary search for two
-		// candidate links if the number of links is large-ish (20+).
-		// Otherwise search all links. The cutoff point between binary and
-		// linear search was determined by benchmarking against the unix
+		// Figure out which links to consider. Do a binary search for 2
+		// candidate links if the number of links from the node is large-ish
+		// (20+). Otherwise search all links. The cutoff point between binary
+		// and linear search was determined by benchmarking against the unix
 		// english dictionary.
 		var start, stop int
 		if len(t.links) >= 20 {
@@ -88,10 +88,13 @@ outerLoop:
 		}
 
 		// Perform the check on all candidate links.
+	innerLoop:
 		for i := start; i <= stop; i++ {
 			link := &t.links[i]
 			m := matchingChars(prefix, link.str)
 			switch {
+			case m == 0:
+				continue innerLoop
 			case m == len(link.str):
 				// Full link match, so proceed down subtree.
 				t, prefix = link.tree, prefix[m:]

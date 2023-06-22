@@ -64,7 +64,7 @@ func matchingChars(s1, s2 string) int {
 func (t *Tree) Find(prefix string) (data any, err error) {
 outerLoop:
 	for {
-		// Ran out of prefix? Then return data if this node is terminal.
+		// Ran out of prefix? Then return data only if this node is terminal.
 		if len(prefix) == 0 {
 			if t.terminal {
 				return t.data, nil
@@ -73,18 +73,16 @@ outerLoop:
 			}
 		}
 
-		// Figure out which links to consider. Do a binary search for 2
-		// candidate links if the number of links from the node is large-ish
-		// (20+). Otherwise search all links. The cutoff point between binary
-		// and linear search was determined by benchmarking against the unix
+		// Figure out which links to consider. If the number of links from the
+		// node is large-ish (20+), do a binary search for 2 candidate links.
+		// Otherwise search all links. The cutoff point between binary and
+		// linear search was determined by benchmarking against the unix
 		// english dictionary.
-		var start, stop int
+		start, stop := 0, len(t.links)-1
 		if len(t.links) >= 20 {
 			ix := sort.Search(len(t.links),
 				func(i int) bool { return t.links[i].str >= prefix })
-			start, stop = maxInt(0, ix-1), minInt(ix, len(t.links)-1)
-		} else {
-			start, stop = 0, len(t.links)-1
+			start, stop = maxInt(0, ix-1), minInt(ix, stop)
 		}
 
 		// Perform the check on all candidate links.

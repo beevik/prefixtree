@@ -27,8 +27,8 @@ func ExampleTree_usage() {
 
 	// Attempt to find various prefixes in the tree, and output
 	// the result.
-	fmt.Printf("%-18s %-8s %s\n", "prefix", "data", "error")
-	fmt.Printf("%-18s %-8s %s\n", "------", "----", "-----")
+	fmt.Printf("%-18s %-8s %s\n", "prefix", "value", "error")
+	fmt.Printf("%-18s %-8s %s\n", "------", "-----", "-----")
 	for _, s := range []string{
 		"a",
 		"appl",
@@ -46,13 +46,13 @@ func ExampleTree_usage() {
 		"lemon meringue",
 		"lemon meringues",
 	} {
-		data, err := tree.Find(s)
-		fmt.Printf("%-18s %-8v %v\n", s, data, err)
+		value, err := tree.Find(s)
+		fmt.Printf("%-18s %-8v %v\n", s, value, err)
 	}
 
 	// Output:
-	// prefix             data     error
-	// ------             ----     -----
+	// prefix             value    error
+	// ------             -----    -----
 	// a                  <nil>    prefixtree: prefix ambiguous
 	// appl               <nil>    prefixtree: prefix ambiguous
 	// apple              0        <nil>

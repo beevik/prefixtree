@@ -3,9 +3,9 @@
 // license that can be found in the LICENSE file.
 
 // Package prefixtree implements a prefix tree (technically, a trie). A prefix
-// tree enables rapid searching for strings that uniquely match a given
-// prefix. This implementation allows the user to associate data with each
-// string, so it can act as a sort of flexible key-value store.
+// tree enables rapid searching for key strings that uniquely match a given
+// prefix. This implementation allows the user to associate value data with
+// each key string, so it can act as a sort of flexible key-value store.
 package prefixtree
 
 import (
@@ -26,11 +26,11 @@ var (
 )
 
 // A Tree represents a prefix tree containing strings and their associated
-// data. The tree is implemented as a trie and can be searched efficiently for
-// unique prefix matches.
+// value data. The tree is implemented as a trie and can be searched
+// efficiently for unique prefix matches.
 type Tree struct {
 	links       []link
-	data        any
+	value       any
 	terminal    bool
 	descendants int
 }
@@ -57,17 +57,18 @@ func matchingChars(s1, s2 string) int {
 	return i
 }
 
-// Find searches the prefix tree for a string that uniquely matches the
-// prefix. If found, the data associated with the string is returned. If not
-// found, ErrPrefixNotFound is returned. If the prefix matches more than one
-// string in the tree, ErrPrefixAmbiguous is returned.
-func (t *Tree) Find(prefix string) (data any, err error) {
+// Find searches the prefix tree for a key string that uniquely matches the
+// prefix. If found, the value data associated with the key is returned. If
+// not found, ErrPrefixNotFound is returned. If the prefix matches more than
+// one key in the tree, ErrPrefixAmbiguous is returned.
+func (t *Tree) Find(prefix string) (value any, err error) {
 outerLoop:
 	for {
-		// Ran out of prefix? Then return data only if this node is terminal.
+		// Ran out of prefix? Then return value data only if this node is
+		// terminal.
 		if len(prefix) == 0 {
 			if t.terminal {
-				return t.data, nil
+				return t.value, nil
 			} else {
 				return nil, ErrPrefixAmbiguous
 			}
@@ -98,13 +99,13 @@ outerLoop:
 				t, prefix = link.tree, prefix[m:]
 				continue outerLoop
 			case m == len(prefix):
-				// Remaining prefix fully consumed, so return data unless it's
-				// non-terminal or ambiguous.
+				// Remaining prefix fully consumed, so return value data
+				// unless it's non-terminal or ambiguous.
 				switch {
 				case link.tree.descendants > 1:
 					return nil, ErrPrefixAmbiguous
 				case link.tree.terminal:
-					return link.tree.data, nil
+					return link.tree.value, nil
 				default:
 					return nil, ErrPrefixNotFound
 				}
@@ -114,22 +115,22 @@ outerLoop:
 	}
 }
 
-// Add a string and its associated data to the prefix tree.
-func (t *Tree) Add(s string, data any) {
+// Add a key string and its associated value data to the prefix tree.
+func (t *Tree) Add(key string, value any) {
 outerLoop:
 	for {
 		t.descendants++
 
 		// If we've consumed the entire string, then the tree node is terminal
 		// and we're done.
-		if len(s) == 0 {
-			t.terminal, t.data = true, data
+		if len(key) == 0 {
+			t.terminal, t.value = true, value
 			break outerLoop
 		}
 
 		// Find the lexicographical link insertion point.
 		ix := sort.Search(len(t.links),
-			func(i int) bool { return t.links[i].str >= s })
+			func(i int) bool { return t.links[i].str >= key })
 
 		// Check the links before and after the insertion point for a matching
 		// prefix to see if we need to split one of them.
@@ -138,11 +139,11 @@ outerLoop:
 	innerLoop:
 		for li, lm := maxInt(ix-1, 0), minInt(ix, len(t.links)-1); li <= lm; li++ {
 			link := &t.links[li]
-			m := matchingChars(link.str, s)
+			m := matchingChars(link.str, key)
 			switch {
 			case m == len(link.str):
 				// Full link match, so proceed down the subtree.
-				t, s = link.tree, s[m:]
+				t, key = link.tree, key[m:]
 				continue outerLoop
 			case m > 0:
 				// Partial match, so we'll need to split this tree node.
@@ -153,9 +154,9 @@ outerLoop:
 
 		// No split necessary, so insert a new link and subtree.
 		if splitLink == nil {
-			subtree := &Tree{data: data, terminal: true, descendants: 1}
+			subtree := &Tree{value: value, terminal: true, descendants: 1}
 			t.links = append(t.links[:ix],
-				append([]link{{s, subtree}}, t.links[ix:]...)...)
+				append([]link{{key, subtree}}, t.links[ix:]...)...)
 			break outerLoop
 		}
 
@@ -167,7 +168,7 @@ outerLoop:
 			descendants: splitLink.tree.descendants,
 		}
 		splitLink.str, splitLink.tree = s1, child
-		t, s = child, s[splitIndex:]
+		t, key = child, key[splitIndex:]
 	}
 }
 
@@ -178,11 +179,11 @@ func (t *Tree) Output() {
 }
 
 func (t *Tree) outputNode(level int) {
-	fmt.Printf("%sNode: term=%v desc=%d data=%v\n",
-		strings.Repeat("  ", level), t.terminal, t.descendants, t.data)
+	fmt.Printf("%sNode: term=%v desc=%d value=%v\n",
+		strings.Repeat("    ", level), t.terminal, t.descendants, t.value)
 	for i, l := range t.links {
-		fmt.Printf("%s Link %d: s=%s\n",
-			strings.Repeat("  ", level), i, l.str)
+		fmt.Printf("%s  Link %d: s=\"%s\"\n",
+			strings.Repeat("    ", level), i, l.str)
 		l.tree.outputNode(level + 1)
 	}
 }

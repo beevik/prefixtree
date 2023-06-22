@@ -30,7 +30,7 @@ var (
 // unique prefix matches.
 type Tree struct {
 	links       []link
-	data        interface{}
+	data        any
 	terminal    bool
 	descendants int
 }
@@ -61,7 +61,7 @@ func matchingChars(s1, s2 string) int {
 // prefix. If found, the data associated with the string is returned. If not
 // found, ErrPrefixNotFound is returned. If the prefix matches more than one
 // string in the tree, ErrPrefixAmbiguous is returned.
-func (t *Tree) Find(prefix string) (data interface{}, err error) {
+func (t *Tree) Find(prefix string) (data any, err error) {
 outerLoop:
 	for {
 		// Ran out of prefix? Then return data if this node is terminal.
@@ -114,7 +114,7 @@ outerLoop:
 }
 
 // Add a string and its associated data to the prefix tree.
-func (t *Tree) Add(s string, data interface{}) {
+func (t *Tree) Add(s string, data any) {
 outerLoop:
 	for {
 		t.descendants++

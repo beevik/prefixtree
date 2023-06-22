@@ -31,130 +31,125 @@ func buildTree(entries []testEntry) *Tree {
 	return tree
 }
 
-func testTree(t *testing.T, iter int, tree *Tree, tests []testFind) {
+func testTree(t *testing.T, tree *Tree, tests []testFind) {
 	for _, test := range tests {
 		data, err := tree.Find(test.s)
 		if err != nil && err != test.err {
-			t.Errorf("Iter #%d Find(\"%s\") returned [%v], expected [%v]\n",
-				iter, test.s, err, test.err)
+			t.Errorf("Find(\"%s\") returned [%v], expected [%v]\n",
+				test.s, err, test.err)
 		}
 		if err == nil && data.(int) != test.data {
-			t.Errorf("Iter #%d Find(\"%s\") returned %d, expected %d\n",
-				iter, test.s, data.(int), test.data)
+			t.Errorf("Find(\"%s\") returned %d, expected %d\n",
+				test.s, data.(int), test.data)
 		}
 	}
 }
 
 func TestAdd(t *testing.T) {
-	for iter := 0; iter < 100; iter++ {
-		tree := buildTree([]testEntry{
-			{"apple", 1},
-			{"applepie", 2},
-			{"a", 3},
-			{"armor", 4},
-		})
-		testTree(t, iter, tree, []testFind{
-			{"a", 3, nil},
-			{"ap", 0, ErrPrefixAmbiguous},
-			{"app", 0, ErrPrefixAmbiguous},
-			{"appl", 0, ErrPrefixAmbiguous},
-			{"apps", 0, ErrPrefixNotFound},
-			{"apple", 1, nil},
-			{"applep", 2, nil},
-			{"applepi", 2, nil},
-			{"applepie", 2, nil},
-			{"applepies", 0, ErrPrefixNotFound},
-			{"applepix", 0, ErrPrefixNotFound},
-			{"ar", 4, nil},
-			{"arm", 4, nil},
-			{"armo", 4, nil},
-			{"armor", 4, nil},
-			{"armors", 0, ErrPrefixNotFound},
-			{"armx", 0, ErrPrefixNotFound},
-			{"ax", 0, ErrPrefixNotFound},
-			{"b", 0, ErrPrefixNotFound},
-			{"", 0, ErrPrefixAmbiguous},
-		})
-	}
+	tree := buildTree([]testEntry{
+		{"apple", 1},
+		{"applepie", 2},
+		{"a", 3},
+		{"armor", 4},
+	})
+	testTree(t, tree, []testFind{
+		{"a", 3, nil},
+		{"ap", 0, ErrPrefixAmbiguous},
+		{"app", 0, ErrPrefixAmbiguous},
+		{"appl", 0, ErrPrefixAmbiguous},
+		{"apps", 0, ErrPrefixNotFound},
+		{"apple", 1, nil},
+		{"applep", 2, nil},
+		{"applepi", 2, nil},
+		{"applepie", 2, nil},
+		{"applepies", 0, ErrPrefixNotFound},
+		{"applepix", 0, ErrPrefixNotFound},
+		{"ar", 4, nil},
+		{"arm", 4, nil},
+		{"armo", 4, nil},
+		{"armor", 4, nil},
+		{"armors", 0, ErrPrefixNotFound},
+		{"armx", 0, ErrPrefixNotFound},
+		{"ax", 0, ErrPrefixNotFound},
+		{"b", 0, ErrPrefixNotFound},
+		{"", 0, ErrPrefixAmbiguous},
+	})
 }
 
 func TestSplit(t *testing.T) {
-	for iter := 0; iter < 20; iter++ {
-		tree := buildTree([]testEntry{
-			{"abc", 1},
-			{"ab", 2},
-		})
-		find := []testFind{
-			{"a", 0, ErrPrefixAmbiguous},
-			{"ab", 2, nil},
-			{"abc", 1, nil},
-		}
-		testTree(t, iter, tree, find)
+	tree := buildTree([]testEntry{
+		{"abc", 1},
+		{"ab", 2},
+	})
+	find := []testFind{
+		{"a", 0, ErrPrefixAmbiguous},
+		{"ab", 2, nil},
+		{"abc", 1, nil},
 	}
+	testTree(t, tree, find)
 }
 
 func TestLargeDegree(t *testing.T) {
-	for iter := 0; iter < 100; iter++ {
-		tree := buildTree([]testEntry{
-			{"a", 1},
-			{"b", 2},
-			{"c", 3},
-			{"d", 4},
-			{"e", 5},
-			{"f", 6},
-			{"g", 7},
-			{"h", 8},
-			{"i", 9},
-			{"j", 10},
-			{"k", 11},
-			{"dog", 12},
-			{"l", 13},
-			{"m", 14},
-			{"n", 15},
-			{"o", 16},
-			{"p", 17},
-			{"q", 18},
-			{"r", 19},
-			{"s", 20},
-			{"t", 21},
-			{"u", 22},
-			{"v", 23},
-			{"w", 24},
-			{"x", 25},
-			{"y", 26},
-			{"z", 27},
-		})
-		testTree(t, iter, tree, []testFind{
-			{"a", 1, nil},
-			{"b", 2, nil},
-			{"c", 3, nil},
-			{"d", 4, nil},
-			{"e", 5, nil},
-			{"f", 6, nil},
-			{"g", 7, nil},
-			{"h", 8, nil},
-			{"i", 9, nil},
-			{"j", 10, nil},
-			{"k", 11, nil},
-			{"dog", 12, nil},
-			{"do", 12, nil},
-			{"l", 13, nil},
-			{"m", 14, nil},
-			{"n", 15, nil},
-			{"o", 16, nil},
-			{"p", 17, nil},
-			{"q", 18, nil},
-			{"r", 19, nil},
-			{"s", 20, nil},
-			{"t", 21, nil},
-			{"u", 22, nil},
-			{"v", 23, nil},
-			{"w", 24, nil},
-			{"x", 25, nil},
-			{"y", 26, nil},
-			{"z", 27, nil},
-		})
-	}
+	tree := buildTree([]testEntry{
+		{"-a", 1},
+		{"-b", 2},
+		{"-c", 3},
+		{"-d", 4},
+		{"-e", 5},
+		{"-f", 6},
+		{"-g", 7},
+		{"-h", 8},
+		{"-i", 9},
+		{"-j", 10},
+		{"-k", 11},
+		{"-dog", 12},
+		{"-l", 13},
+		{"-m", 14},
+		{"-n", 15},
+		{"-o", 16},
+		{"-p", 17},
+		{"-q", 18},
+		{"-r", 19},
+		{"-s", 20},
+		{"-t", 21},
+		{"-u", 22},
+		{"-v", 23},
+		{"-w", 24},
+		{"-x", 25},
+		{"-y", 26},
+		{"-z", 27},
+	})
+	testTree(t, tree, []testFind{
+		{"-", 0, ErrPrefixAmbiguous},
+		{"-a", 1, nil},
+		{"-b", 2, nil},
+		{"-c", 3, nil},
+		{"-d", 4, nil},
+		{"-e", 5, nil},
+		{"-f", 6, nil},
+		{"-g", 7, nil},
+		{"-h", 8, nil},
+		{"-i", 9, nil},
+		{"-j", 10, nil},
+		{"-k", 11, nil},
+		{"-dog", 12, nil},
+		{"-do", 12, nil},
+		{"-l", 13, nil},
+		{"-m", 14, nil},
+		{"-n", 15, nil},
+		{"-o", 16, nil},
+		{"-p", 17, nil},
+		{"-q", 18, nil},
+		{"-r", 19, nil},
+		{"-s", 20, nil},
+		{"-t", 21, nil},
+		{"-u", 22, nil},
+		{"-v", 23, nil},
+		{"-w", 24, nil},
+		{"-x", 25, nil},
+		{"-y", 26, nil},
+		{"-z", 27, nil},
+	})
 }
 
 func TestMatchingChars(t *testing.T) {

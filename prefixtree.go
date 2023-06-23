@@ -57,9 +57,9 @@ func (t *Tree) Find(prefix string) (value any, err error) {
 	return st.value, nil
 }
 
-// FindAllValues searches the prefix tree for all key strings prefixed by the
+// FindAll searches the prefix tree for all key strings prefixed by the
 // provided prefix. All matching values are returned.
-func (t *Tree) FindAllValues(prefix string) (values []any) {
+func (t *Tree) FindAll(prefix string) (values []any) {
 	st, err := t.findSubtree(prefix)
 	if err == ErrPrefixNotFound {
 		return []any{}

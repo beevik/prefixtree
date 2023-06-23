@@ -218,7 +218,7 @@ func TestFindAllValues(t *testing.T) {
 	}
 
 	for _, expected := range results {
-		values := tree.FindAllValues(expected.key)
+		values := tree.FindAll(expected.key)
 		match := false
 		if len(values) == len(expected.values) {
 			match = true

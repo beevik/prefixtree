@@ -13,43 +13,43 @@ import (
 
 type entry struct {
 	key   string
-	value int
+	value any
 }
 
-type lookup struct {
-	key           string
-	expectedValue int
-	expectedErr   error
+type result struct {
+	key   string
+	value any
+	err   error
 }
 
-func test(t *testing.T, entries []entry, lookups []lookup) *Tree {
+func test(t *testing.T, entries []entry, results []result) *Tree {
 	// Run 256 iterations of build/find using random tree entry
 	// insertion orders.
 	var tree *Tree
 	for i := 0; i < 256; i++ {
-		tree = new(Tree)
+		tree = New()
 		for _, i := range rand.Perm(len(entries)) {
 			tree.Add(entries[i].key, entries[i].value)
 		}
 
 		fail := false
-		for _, lookup := range lookups {
-			value, err := tree.Find(lookup.key)
-			if lookup.expectedErr != nil {
-				if err != lookup.expectedErr {
+		for _, expected := range results {
+			value, err := tree.Find(expected.key)
+			if expected.err != nil {
+				if err != expected.err {
 					fail = true
 					t.Errorf("Find(\"%s\") returned error [%v], expected error [%v].\n",
-						lookup.key, err, lookup.expectedErr)
+						expected.key, err, expected.err)
 				}
 			} else {
 				if err != nil {
 					fail = true
 					t.Errorf("Find(\"%s\") returned error [%v], expected value %d.\n",
-						lookup.key, err, lookup.expectedValue)
-				} else if value.(int) != lookup.expectedValue {
+						expected.key, err, expected.value)
+				} else if value != expected.value {
 					fail = true
 					t.Errorf("Find(\"%s\") returned value %d, expected value %d.\n",
-						lookup.key, value.(int), lookup.expectedValue)
+						expected.key, value, expected.value)
 				}
 			}
 		}
@@ -74,7 +74,7 @@ func TestAdd(t *testing.T) {
 			{"a", 3},
 			{"armor", 4},
 		},
-		[]lookup{
+		[]result{
 			{"a", 3, nil},
 			{"ap", 0, ErrPrefixAmbiguous},
 			{"app", 0, ErrPrefixAmbiguous},
@@ -107,7 +107,7 @@ func TestSplit(t *testing.T) {
 			{"abc", 1},
 			{"ab", 2},
 		},
-		[]lookup{
+		[]result{
 			{"a", 0, ErrPrefixAmbiguous},
 			{"ab", 2, nil},
 			{"abc", 1, nil},
@@ -146,7 +146,7 @@ func TestLargeDegree(t *testing.T) {
 			{"-y", 26},
 			{"-z", 27},
 		},
-		[]lookup{
+		[]result{
 			{"-", 0, ErrPrefixAmbiguous},
 			{"-a", 1, nil},
 			{"-b", 2, nil},
@@ -177,6 +177,64 @@ func TestLargeDegree(t *testing.T) {
 			{"-y", 26, nil},
 			{"-z", 27, nil},
 		})
+}
+
+func TestFindAllValues(t *testing.T) {
+	entries := []entry{
+		{"apple", 1},
+		{"applepie", 2},
+		{"a", 3},
+		{"arm", 4},
+		{"bee", 5},
+	}
+
+	tree := New()
+	for _, entry := range entries {
+		tree.Add(entry.key, entry.value)
+	}
+
+	results := []struct {
+		key    string
+		values []any
+	}{
+		{"", []any{3, 1, 2, 4, 5}},
+		{"a", []any{3, 1, 2, 4}},
+		{"ap", []any{1, 2}},
+		{"app", []any{1, 2}},
+		{"appl", []any{1, 2}},
+		{"apple", []any{1, 2}},
+		{"applep", []any{2}},
+		{"applepi", []any{2}},
+		{"applepie", []any{2}},
+		{"applepies", []any{}},
+		{"ar", []any{4}},
+		{"arm", []any{4}},
+		{"arms", []any{}},
+		{"b", []any{5}},
+		{"be", []any{5}},
+		{"bee", []any{5}},
+		{"bees", []any{}},
+		{"c", []any{}},
+	}
+
+	for _, expected := range results {
+		values := tree.FindAllValues(expected.key)
+		match := false
+		if len(values) == len(expected.values) {
+			match = true
+			for i := 0; i < len(values); i++ {
+				if values[i] != expected.values[i] {
+					match = false
+					break
+				}
+			}
+		}
+
+		if !match {
+			t.Errorf("FindAllValues(\"%s\") returned %v, expected %v.\n",
+				expected.key, values, expected.values)
+		}
+	}
 }
 
 func TestMatchingChars(t *testing.T) {

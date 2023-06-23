@@ -45,32 +45,40 @@ func New() *Tree {
 	return new(Tree)
 }
 
-// matchingChars returns the number of shared characters in s1 and s2,
-// starting from the beginning of each string.
-func matchingChars(s1, s2 string) int {
-	i := 0
-	for l := minInt(len(s1), len(s2)); i < l; i++ {
-		if s1[i] != s2[i] {
-			break
-		}
-	}
-	return i
-}
-
 // Find searches the prefix tree for a key string that uniquely matches the
 // prefix. If found, the value data associated with the key is returned. If
 // not found, ErrPrefixNotFound is returned. If the prefix matches more than
 // one key in the tree, ErrPrefixAmbiguous is returned.
 func (t *Tree) Find(prefix string) (value any, err error) {
+	st, err := t.findSubtree(prefix)
+	if err != nil {
+		return nil, err
+	}
+	return st.value, nil
+}
+
+// FindAllValues searches the prefix tree for all key strings prefixed by the
+// provided prefix. All matching values are returned.
+func (t *Tree) FindAllValues(prefix string) (values []any) {
+	st, err := t.findSubtree(prefix)
+	if err == ErrPrefixNotFound {
+		return []any{}
+	}
+	return appendDescendantValues(st, nil)
+}
+
+// findSubtree searches the prefix tree for the deepest subtree matching
+// the prefix.
+func (t *Tree) findSubtree(prefix string) (*Tree, error) {
 outerLoop:
 	for {
 		// Ran out of prefix? Then return value data only if this node is
 		// terminal.
 		if len(prefix) == 0 {
 			if t.terminal {
-				return t.value, nil
+				return t, nil
 			} else {
-				return nil, ErrPrefixAmbiguous
+				return t, ErrPrefixAmbiguous
 			}
 		}
 
@@ -95,7 +103,7 @@ outerLoop:
 			case m == 0:
 				continue innerLoop
 			case m == len(link.str):
-				// Full link match, so proceed down subtree.
+				// Full link 1, so proceed down subtree.
 				t, prefix = link.tree, prefix[m:]
 				continue outerLoop
 			case m == len(prefix):
@@ -103,9 +111,9 @@ outerLoop:
 				// unless it's non-terminal or ambiguous.
 				switch {
 				case link.tree.descendants > 1:
-					return nil, ErrPrefixAmbiguous
+					return link.tree, ErrPrefixAmbiguous
 				case link.tree.terminal:
-					return link.tree.value, nil
+					return link.tree, nil
 				default:
 					return nil, ErrPrefixNotFound
 				}
@@ -113,6 +121,30 @@ outerLoop:
 		}
 		return nil, ErrPrefixNotFound
 	}
+}
+
+// matchingChars returns the number of shared characters in s1 and s2,
+// starting from the beginning of each string.
+func matchingChars(s1, s2 string) int {
+	i := 0
+	for l := minInt(len(s1), len(s2)); i < l; i++ {
+		if s1[i] != s2[i] {
+			break
+		}
+	}
+	return i
+}
+
+// appendDescendantValues recursively appends a tree's descendant values
+// to an array of values.
+func appendDescendantValues(t *Tree, values []any) []any {
+	if t.terminal {
+		values = append(values, t.value)
+	}
+	for i := 0; i < len(t.links); i++ {
+		values = appendDescendantValues(t.links[i].tree, values)
+	}
+	return values
 }
 
 // Add a key string and its associated value data to the prefix tree.

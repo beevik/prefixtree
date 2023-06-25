@@ -16,13 +16,13 @@ type entry struct {
 	value any
 }
 
-type result struct {
+type testcase struct {
 	key   string
 	value any
 	err   error
 }
 
-func test(t *testing.T, entries []entry, results []result) *Tree {
+func test(t *testing.T, entries []entry, cases []testcase) *Tree {
 	// Run 256 iterations of build/find using random tree entry
 	// insertion orders.
 	var tree *Tree
@@ -33,23 +33,23 @@ func test(t *testing.T, entries []entry, results []result) *Tree {
 		}
 
 		fail := false
-		for _, expected := range results {
-			value, err := tree.Find(expected.key)
-			if expected.err != nil {
-				if err != expected.err {
+		for _, c := range cases {
+			value, err := tree.Find(c.key)
+			if c.err != nil {
+				if err != c.err {
 					fail = true
 					t.Errorf("Find(\"%s\") returned error [%v], expected error [%v].\n",
-						expected.key, err, expected.err)
+						c.key, err, c.err)
 				}
 			} else {
 				if err != nil {
 					fail = true
 					t.Errorf("Find(\"%s\") returned error [%v], expected value %d.\n",
-						expected.key, err, expected.value)
-				} else if value != expected.value {
+						c.key, err, c.value)
+				} else if value != c.value {
 					fail = true
 					t.Errorf("Find(\"%s\") returned value %d, expected value %d.\n",
-						expected.key, value, expected.value)
+						c.key, value, c.value)
 				}
 			}
 		}
@@ -74,7 +74,7 @@ func TestAdd(t *testing.T) {
 			{"a", 3},
 			{"armor", 4},
 		},
-		[]result{
+		[]testcase{
 			{"a", 3, nil},
 			{"ap", 0, ErrPrefixAmbiguous},
 			{"app", 0, ErrPrefixAmbiguous},
@@ -107,7 +107,7 @@ func TestSplit(t *testing.T) {
 			{"abc", 1},
 			{"ab", 2},
 		},
-		[]result{
+		[]testcase{
 			{"a", 0, ErrPrefixAmbiguous},
 			{"ab", 2, nil},
 			{"abc", 1, nil},
@@ -146,7 +146,7 @@ func TestLargeDegree(t *testing.T) {
 			{"-y", 26},
 			{"-z", 27},
 		},
-		[]result{
+		[]testcase{
 			{"-", 0, ErrPrefixAmbiguous},
 			{"-a", 1, nil},
 			{"-b", 2, nil},
@@ -179,7 +179,69 @@ func TestLargeDegree(t *testing.T) {
 		})
 }
 
-func TestFindAllValues(t *testing.T) {
+func TestFindKeys(t *testing.T) {
+	entries := []entry{
+		{"apple", 1},
+		{"applepie", 2},
+		{"a", 3},
+		{"arm", 4},
+		{"bee", 5},
+		{"bog", 6},
+	}
+
+	tree := New()
+	for _, entry := range entries {
+		tree.Add(entry.key, entry.value)
+	}
+
+	cases := []struct {
+		prefix string
+		keys   []string
+	}{
+		{"", []string{"a", "apple", "applepie", "arm", "bee", "bog"}},
+		{"a", []string{"a", "apple", "applepie", "arm"}},
+		{"ap", []string{"apple", "applepie"}},
+		{"app", []string{"apple", "applepie"}},
+		{"appl", []string{"apple", "applepie"}},
+		{"apple", []string{"apple", "applepie"}},
+		{"applep", []string{"applepie"}},
+		{"applepi", []string{"applepie"}},
+		{"applepie", []string{"applepie"}},
+		{"applepies", []string{}},
+		{"ar", []string{"arm"}},
+		{"arm", []string{"arm"}},
+		{"arms", []string{}},
+		{"b", []string{"bee", "bog"}},
+		{"be", []string{"bee"}},
+		{"bee", []string{"bee"}},
+		{"bees", []string{}},
+		{"bo", []string{"bog"}},
+		{"bog", []string{"bog"}},
+		{"bogs", []string{}},
+		{"c", []string{}},
+	}
+
+	for _, c := range cases {
+		keys := tree.FindKeys(c.prefix)
+		match := false
+		if len(keys) == len(c.keys) {
+			match = true
+			for i := 0; i < len(keys); i++ {
+				if keys[i] != c.keys[i] {
+					match = false
+					break
+				}
+			}
+		}
+
+		if !match {
+			t.Errorf("FindAllValues(\"%s\") returned %v, expected %v.\n",
+				c.prefix, keys, c.keys)
+		}
+	}
+}
+
+func TestFindAll(t *testing.T) {
 	entries := []entry{
 		{"apple", 1},
 		{"applepie", 2},
@@ -193,7 +255,7 @@ func TestFindAllValues(t *testing.T) {
 		tree.Add(entry.key, entry.value)
 	}
 
-	results := []struct {
+	cases := []struct {
 		key    string
 		values []any
 	}{
@@ -217,13 +279,13 @@ func TestFindAllValues(t *testing.T) {
 		{"c", []any{}},
 	}
 
-	for _, expected := range results {
-		values := tree.FindAll(expected.key)
+	for _, c := range cases {
+		values := tree.FindValues(c.key)
 		match := false
-		if len(values) == len(expected.values) {
+		if len(values) == len(c.values) {
 			match = true
 			for i := 0; i < len(values); i++ {
-				if values[i] != expected.values[i] {
+				if values[i] != c.values[i] {
 					match = false
 					break
 				}
@@ -232,7 +294,7 @@ func TestFindAllValues(t *testing.T) {
 
 		if !match {
 			t.Errorf("FindAllValues(\"%s\") returned %v, expected %v.\n",
-				expected.key, values, expected.values)
+				c.key, values, c.values)
 		}
 	}
 }
@@ -243,7 +305,7 @@ func TestMatchingChars(t *testing.T) {
 		s2     string
 		result int
 	}
-	var tests = []test{
+	var cases = []test{
 		{"a", "ap", 1},
 		{"ap", "ap", 2},
 		{"app", "ap", 2},
@@ -252,11 +314,11 @@ func TestMatchingChars(t *testing.T) {
 		{"apple", "a", 1},
 		{"apple", "bag", 0},
 	}
-	for _, test := range tests {
-		r := matchingChars(test.s1, test.s2)
-		if r != test.result {
+	for _, c := range cases {
+		r := matchingChars(c.s1, c.s2)
+		if r != c.result {
 			t.Errorf("matchingChars(\"%s\", \"%s\") returned %d, expected %d\n",
-				test.s1, test.s2, r, test.result)
+				c.s1, c.s2, r, c.result)
 		}
 	}
 }

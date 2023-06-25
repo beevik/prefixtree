@@ -25,19 +25,25 @@ var (
 	ErrPrefixAmbiguous = errors.New("prefixtree: prefix ambiguous")
 )
 
+// A KeyValue type encapsulates a key string and its associated value.
+type KeyValue struct {
+	Key   string
+	Value any
+}
+
 // A Tree represents a prefix tree containing strings and their associated
 // value data. The tree is implemented as a trie and can be searched
 // efficiently for unique prefix matches.
 type Tree struct {
-	links       []link
+	key         string
 	value       any
-	terminal    bool
+	links       []link
 	descendants int
 }
 
 type link struct {
-	str  string
-	tree *Tree
+	keyseg string
+	tree   *Tree
 }
 
 // New returns an empty prefix tree.
@@ -45,11 +51,68 @@ func New() *Tree {
 	return new(Tree)
 }
 
-// Find searches the prefix tree for a key string that uniquely matches the
-// prefix. If found, the value data associated with the key is returned. If
-// not found, ErrPrefixNotFound is returned. If the prefix matches more than
-// one key in the tree, ErrPrefixAmbiguous is returned.
+// isTerminal returns true if the tree is a terminal subtree in the
+// prefix tree.
+func (t *Tree) isTerminal() bool {
+	return t.key != ""
+}
+
+// Find searches the prefix tree for all key strings prefixed by the
+// provided prefix and returns them.
+//
+// Deprecated: Use FindValue instead.
 func (t *Tree) Find(prefix string) (value any, err error) {
+	return t.FindValue(prefix)
+}
+
+// FindAll searches the prefix tree for all key strings prefixed by the
+// provided prefix. All associated values are returned.
+//
+// Deprecated: Use FindValues instead.
+func (t *Tree) FindAll(prefix string) (values []any) {
+	return t.FindValues(prefix)
+}
+
+// FindKey searches the prefix tree for a key string that uniquely matches the
+// prefix. If found, the full matching key is returned. If not found,
+// ErrPrefixNotFound is returned. If the prefix matches more than one key in
+// the tree, ErrPrefixAmbiguous is returned.
+func (t *Tree) FindKey(prefix string) (key string, err error) {
+	st, err := t.findSubtree(prefix)
+	if err != nil {
+		return "", err
+	}
+	return st.key, nil
+}
+
+// FindKeyValue searches the prefix tree for a key string that uniquely
+// matches the prefix. If found, the full matching key and its associated
+// value is returned. If not found, ErrPrefixNotFound is returned. If the
+// prefix matches more than one key in the tree, ErrPrefixAmbiguous is
+// returned.
+func (t *Tree) FindKeyValue(prefix string) (kv KeyValue, err error) {
+	st, err := t.findSubtree(prefix)
+	if err != nil {
+		return KeyValue{}, err
+	}
+	return KeyValue{st.key, st.value}, nil
+}
+
+// FindKeys searches the prefix tree for all key strings prefixed by the
+// provided prefix and returns them.
+func (t *Tree) FindKeys(prefix string) (keys []string) {
+	st, err := t.findSubtree(prefix)
+	if err == ErrPrefixNotFound {
+		return []string{}
+	}
+	return appendDescendantKeys(st, nil)
+}
+
+// FindValue searches the prefix tree for a key string that uniquely matches
+// the prefix. If found, the value associated with the key is returned. If not
+// found, ErrPrefixNotFound is returned. If the prefix matches more than one
+// key in the tree, ErrPrefixAmbiguous is returned.
+func (t *Tree) FindValue(prefix string) (value any, err error) {
 	st, err := t.findSubtree(prefix)
 	if err != nil {
 		return nil, err
@@ -57,9 +120,19 @@ func (t *Tree) Find(prefix string) (value any, err error) {
 	return st.value, nil
 }
 
-// FindAll searches the prefix tree for all key strings prefixed by the
-// provided prefix. All matching values are returned.
-func (t *Tree) FindAll(prefix string) (values []any) {
+// FindKeyValues searches the prefix tree for all key strings prefixed by the
+// provided prefix. All discovered keys and their values are returned.
+func (t *Tree) FindKeyValues(prefix string) (values []KeyValue) {
+	st, err := t.findSubtree(prefix)
+	if err == ErrPrefixNotFound {
+		return []KeyValue{}
+	}
+	return appendDescendantKeyValues(st, nil)
+}
+
+// FindValues searches the prefix tree for all key strings prefixed by the
+// provided prefix. All associated values are returned.
+func (t *Tree) FindValues(prefix string) (values []any) {
 	st, err := t.findSubtree(prefix)
 	if err == ErrPrefixNotFound {
 		return []any{}
@@ -72,14 +145,12 @@ func (t *Tree) FindAll(prefix string) (values []any) {
 func (t *Tree) findSubtree(prefix string) (*Tree, error) {
 outerLoop:
 	for {
-		// Ran out of prefix? Then return value data only if this node is
-		// terminal.
+		// Ran out of prefix?
 		if len(prefix) == 0 {
-			if t.terminal {
+			if t.isTerminal() {
 				return t, nil
-			} else {
-				return t, ErrPrefixAmbiguous
 			}
+			return t, ErrPrefixAmbiguous
 		}
 
 		// Figure out which links to consider. If the number of links from the
@@ -90,7 +161,7 @@ outerLoop:
 		start, stop := 0, len(t.links)-1
 		if len(t.links) >= 20 {
 			ix := sort.Search(len(t.links),
-				func(i int) bool { return t.links[i].str >= prefix })
+				func(i int) bool { return t.links[i].keyseg >= prefix })
 			start, stop = maxInt(0, ix-1), minInt(ix, stop)
 		}
 
@@ -98,21 +169,21 @@ outerLoop:
 	innerLoop:
 		for i := start; i <= stop; i++ {
 			link := &t.links[i]
-			m := matchingChars(prefix, link.str)
+			m := matchingChars(prefix, link.keyseg)
 			switch {
 			case m == 0:
 				continue innerLoop
-			case m == len(link.str):
+			case m == len(link.keyseg):
 				// Full link 1, so proceed down subtree.
 				t, prefix = link.tree, prefix[m:]
 				continue outerLoop
 			case m == len(prefix):
 				// Remaining prefix fully consumed, so return value data
-				// unless it's non-terminal or ambiguous.
+				// unless it's non-terminal.
 				switch {
 				case link.tree.descendants > 1:
 					return link.tree, ErrPrefixAmbiguous
-				case link.tree.terminal:
+				case link.tree.isTerminal():
 					return link.tree, nil
 				default:
 					return nil, ErrPrefixNotFound
@@ -135,10 +206,34 @@ func matchingChars(s1, s2 string) int {
 	return i
 }
 
+// appendDescendantKeys recursively appends a tree's descendant keys
+// to an array of keys.
+func appendDescendantKeys(t *Tree, keys []string) []string {
+	if t.isTerminal() {
+		keys = append(keys, t.key)
+	}
+	for i := 0; i < len(t.links); i++ {
+		keys = appendDescendantKeys(t.links[i].tree, keys)
+	}
+	return keys
+}
+
+// appendDescendantKeyValues recursively appends a tree's descendant keys
+// to an array of key/value pairs.
+func appendDescendantKeyValues(t *Tree, kv []KeyValue) []KeyValue {
+	if t.isTerminal() {
+		kv = append(kv, KeyValue{t.key, t.value})
+	}
+	for i := 0; i < len(t.links); i++ {
+		kv = appendDescendantKeyValues(t.links[i].tree, kv)
+	}
+	return kv
+}
+
 // appendDescendantValues recursively appends a tree's descendant values
 // to an array of values.
 func appendDescendantValues(t *Tree, values []any) []any {
-	if t.terminal {
+	if t.isTerminal() {
 		values = append(values, t.value)
 	}
 	for i := 0; i < len(t.links); i++ {
@@ -149,20 +244,21 @@ func appendDescendantValues(t *Tree, values []any) []any {
 
 // Add a key string and its associated value data to the prefix tree.
 func (t *Tree) Add(key string, value any) {
+	k := key
 outerLoop:
 	for {
 		t.descendants++
 
 		// If we've consumed the entire string, then the tree node is terminal
 		// and we're done.
-		if len(key) == 0 {
-			t.terminal, t.value = true, value
+		if len(k) == 0 {
+			t.key, t.value = key, value
 			break outerLoop
 		}
 
 		// Find the lexicographical link insertion point.
 		ix := sort.Search(len(t.links),
-			func(i int) bool { return t.links[i].str >= key })
+			func(i int) bool { return t.links[i].keyseg >= k })
 
 		// Check the links before and after the insertion point for a matching
 		// prefix to see if we need to split one of them.
@@ -171,11 +267,11 @@ outerLoop:
 	innerLoop:
 		for li, lm := maxInt(ix-1, 0), minInt(ix, len(t.links)-1); li <= lm; li++ {
 			link := &t.links[li]
-			m := matchingChars(link.str, key)
+			m := matchingChars(link.keyseg, k)
 			switch {
-			case m == len(link.str):
+			case m == len(link.keyseg):
 				// Full link match, so proceed down the subtree.
-				t, key = link.tree, key[m:]
+				t, k = link.tree, k[m:]
 				continue outerLoop
 			case m > 0:
 				// Partial match, so we'll need to split this tree node.
@@ -186,21 +282,28 @@ outerLoop:
 
 		// No split necessary, so insert a new link and subtree.
 		if splitLink == nil {
-			subtree := &Tree{value: value, terminal: true, descendants: 1}
+			child := &Tree{
+				key:         key,
+				value:       value,
+				links:       nil,
+				descendants: 1,
+			}
 			t.links = append(t.links[:ix],
-				append([]link{{key, subtree}}, t.links[ix:]...)...)
+				append([]link{{k, child}}, t.links[ix:]...)...)
 			break outerLoop
 		}
 
 		// A split is necessary, so split the current link's string and insert
 		// a child tree.
-		s1, s2 := splitLink.str[:splitIndex], splitLink.str[splitIndex:]
+		k1, k2 := splitLink.keyseg[:splitIndex], splitLink.keyseg[splitIndex:]
 		child := &Tree{
-			links:       []link{{s2, splitLink.tree}},
+			key:         "",
+			value:       nil,
+			links:       []link{{k2, splitLink.tree}},
 			descendants: splitLink.tree.descendants,
 		}
-		splitLink.str, splitLink.tree = s1, child
-		t, key = child, key[splitIndex:]
+		splitLink.keyseg, splitLink.tree = k1, child
+		t, k = child, k[splitIndex:]
 	}
 }
 
@@ -211,11 +314,11 @@ func (t *Tree) Output() {
 }
 
 func (t *Tree) outputNode(level int) {
-	fmt.Printf("%sNode: term=%v desc=%d value=%v\n",
-		strings.Repeat("    ", level), t.terminal, t.descendants, t.value)
+	fmt.Printf("%sNode: key=\"%s\" term=%v desc=%d value=%v\n",
+		strings.Repeat("    ", level), t.key, t.isTerminal(), t.descendants, t.value)
 	for i, l := range t.links {
-		fmt.Printf("%s  Link %d: s=\"%s\"\n",
-			strings.Repeat("    ", level), i, l.str)
+		fmt.Printf("%s  Link %d: ks=\"%s\"\n",
+			strings.Repeat("    ", level), i, l.keyseg)
 		l.tree.outputNode(level + 1)
 	}
 }

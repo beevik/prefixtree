@@ -105,6 +105,9 @@ func (t *Tree) FindKeys(prefix string) (keys []string) {
 	if err == ErrPrefixNotFound {
 		return []string{}
 	}
+	if st.isTerminal() && err != ErrPrefixAmbiguous {
+		return []string{st.key}
+	}
 	return appendDescendantKeys(st, nil)
 }
 
@@ -127,6 +130,9 @@ func (t *Tree) FindKeyValues(prefix string) (values []KeyValue) {
 	if err == ErrPrefixNotFound {
 		return []KeyValue{}
 	}
+	if st.isTerminal() && err != ErrPrefixAmbiguous {
+		return []KeyValue{{st.key, st.value}}
+	}
 	return appendDescendantKeyValues(st, nil)
 }
 
@@ -136,6 +142,9 @@ func (t *Tree) FindValues(prefix string) (values []any) {
 	st, err := t.findSubtree(prefix)
 	if err == ErrPrefixNotFound {
 		return []any{}
+	}
+	if st.isTerminal() && err != ErrPrefixAmbiguous {
+		return []any{st.value}
 	}
 	return appendDescendantValues(st, nil)
 }

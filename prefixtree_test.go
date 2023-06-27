@@ -199,11 +199,11 @@ func TestFindKeys(t *testing.T) {
 		keys   []string
 	}{
 		{"", []string{"a", "apple", "applepie", "arm", "bee", "bog"}},
-		{"a", []string{"a", "apple", "applepie", "arm"}},
+		{"a", []string{"a"}},
 		{"ap", []string{"apple", "applepie"}},
 		{"app", []string{"apple", "applepie"}},
 		{"appl", []string{"apple", "applepie"}},
-		{"apple", []string{"apple", "applepie"}},
+		{"apple", []string{"apple"}},
 		{"applep", []string{"applepie"}},
 		{"applepi", []string{"applepie"}},
 		{"applepie", []string{"applepie"}},
@@ -221,7 +221,7 @@ func TestFindKeys(t *testing.T) {
 		{"c", []string{}},
 	}
 
-	for _, c := range cases {
+	for i, c := range cases {
 		keys := tree.FindKeys(c.prefix)
 		match := false
 		if len(keys) == len(c.keys) {
@@ -235,13 +235,13 @@ func TestFindKeys(t *testing.T) {
 		}
 
 		if !match {
-			t.Errorf("FindAllValues(\"%s\") returned %v, expected %v.\n",
-				c.prefix, keys, c.keys)
+			t.Errorf("Case %d: FindKeys(\"%s\") returned %v, expected %v.\n",
+				i, c.prefix, keys, c.keys)
 		}
 	}
 }
 
-func TestFindAll(t *testing.T) {
+func TestFindValues(t *testing.T) {
 	entries := []entry{
 		{"apple", 1},
 		{"applepie", 2},
@@ -260,11 +260,11 @@ func TestFindAll(t *testing.T) {
 		values []any
 	}{
 		{"", []any{3, 1, 2, 4, 5}},
-		{"a", []any{3, 1, 2, 4}},
+		{"a", []any{3}},
 		{"ap", []any{1, 2}},
 		{"app", []any{1, 2}},
 		{"appl", []any{1, 2}},
-		{"apple", []any{1, 2}},
+		{"apple", []any{1}},
 		{"applep", []any{2}},
 		{"applepi", []any{2}},
 		{"applepie", []any{2}},
@@ -279,7 +279,7 @@ func TestFindAll(t *testing.T) {
 		{"c", []any{}},
 	}
 
-	for _, c := range cases {
+	for i, c := range cases {
 		values := tree.FindValues(c.key)
 		match := false
 		if len(values) == len(c.values) {
@@ -293,8 +293,8 @@ func TestFindAll(t *testing.T) {
 		}
 
 		if !match {
-			t.Errorf("FindAllValues(\"%s\") returned %v, expected %v.\n",
-				c.key, values, c.values)
+			t.Errorf("Case %d: FindValues(\"%s\") returned %v, expected %v.\n",
+				i, c.key, values, c.values)
 		}
 	}
 }
@@ -314,11 +314,11 @@ func TestMatchingChars(t *testing.T) {
 		{"apple", "a", 1},
 		{"apple", "bag", 0},
 	}
-	for _, c := range cases {
+	for i, c := range cases {
 		r := matchingChars(c.s1, c.s2)
 		if r != c.result {
-			t.Errorf("matchingChars(\"%s\", \"%s\") returned %d, expected %d\n",
-				c.s1, c.s2, r, c.result)
+			t.Errorf("Case %d: matchingChars(\"%s\", \"%s\") returned %d, expected %d\n",
+				i, c.s1, c.s2, r, c.result)
 		}
 	}
 }
@@ -351,10 +351,10 @@ func TestDictionary(t *testing.T) {
 		"diametricall",
 		"diametrically",
 	}
-	for _, key := range keys {
+	for i, key := range keys {
 		_, err := tree.Find(key)
 		if err != nil {
-			t.Errorf("Find(\"%s\") encountered error: %v\n", key, err)
+			t.Errorf("Case %d: Find(\"%s\") encountered error: %v\n", i, key, err)
 		}
 	}
 
@@ -365,10 +365,10 @@ func TestDictionary(t *testing.T) {
 		"de",
 		"dea",
 	}
-	for _, key := range keys {
+	for i, key := range keys {
 		_, err := tree.Find(key)
 		if err != ErrPrefixAmbiguous {
-			t.Errorf("Find(\"%s\") should have been ambiguous\n", key)
+			t.Errorf("Case %d: Find(\"%s\") should have been ambiguous\n", i, key)
 		}
 	}
 }

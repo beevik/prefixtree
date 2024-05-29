@@ -46,7 +46,7 @@ func ExampleTree_usage() {
 		"lemon meringue",
 		"lemon meringues",
 	} {
-		value, err := tree.Find(s)
+		value, err := tree.FindValue(s)
 		fmt.Printf("%-18s %-8v %v\n", s, value, err)
 	}
 

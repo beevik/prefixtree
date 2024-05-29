@@ -34,7 +34,7 @@ func test(t *testing.T, entries []entry, cases []testcase) *Tree {
 
 		fail := false
 		for _, c := range cases {
-			value, err := tree.Find(c.key)
+			value, err := tree.FindValue(c.key)
 			if c.err != nil {
 				if err != c.err {
 					fail = true
@@ -352,7 +352,7 @@ func TestDictionary(t *testing.T) {
 		"diametrically",
 	}
 	for i, key := range keys {
-		_, err := tree.Find(key)
+		_, err := tree.FindValue(key)
 		if err != nil {
 			t.Errorf("Case %d: Find(\"%s\") encountered error: %v\n", i, key, err)
 		}
@@ -366,7 +366,7 @@ func TestDictionary(t *testing.T) {
 		"dea",
 	}
 	for i, key := range keys {
-		_, err := tree.Find(key)
+		_, err := tree.FindValue(key)
 		if err != ErrPrefixAmbiguous {
 			t.Errorf("Case %d: Find(\"%s\") should have been ambiguous\n", i, key)
 		}
@@ -410,7 +410,7 @@ func BenchmarkDictionary(b *testing.B) {
 			"ruddy",
 		}
 		for _, key := range keys {
-			_, err := tree.Find(key)
+			_, err := tree.FindValue(key)
 			if err != nil {
 				b.Errorf("Find(\"%s\") encountered error: %v\n", key, err)
 			}

@@ -57,22 +57,6 @@ func (t *Tree) isTerminal() bool {
 	return t.key != ""
 }
 
-// Find searches the prefix tree for all key strings prefixed by the
-// provided prefix and returns them.
-//
-// Deprecated: Use FindValue instead.
-func (t *Tree) Find(prefix string) (value any, err error) {
-	return t.FindValue(prefix)
-}
-
-// FindAll searches the prefix tree for all key strings prefixed by the
-// provided prefix. All associated values are returned.
-//
-// Deprecated: Use FindValues instead.
-func (t *Tree) FindAll(prefix string) (values []any) {
-	return t.FindValues(prefix)
-}
-
 // FindKey searches the prefix tree for a key string that uniquely matches the
 // prefix. If found, the full matching key is returned. If not found,
 // ErrPrefixNotFound is returned. If the prefix matches more than one key in

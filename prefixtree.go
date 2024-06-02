@@ -155,7 +155,7 @@ outerLoop:
 		if len(t.links) >= 20 {
 			ix := sort.Search(len(t.links),
 				func(i int) bool { return t.links[i].keyseg >= prefix })
-			start, stop = maxInt(0, ix-1), minInt(ix, stop)
+			start, stop = max(0, ix-1), min(ix, stop)
 		}
 
 		// Perform the check on all candidate links.
@@ -191,7 +191,7 @@ outerLoop:
 // starting from the beginning of each string.
 func matchingChars(s1, s2 string) int {
 	i := 0
-	for l := minInt(len(s1), len(s2)); i < l; i++ {
+	for l := min(len(s1), len(s2)); i < l; i++ {
 		if s1[i] != s2[i] {
 			break
 		}
@@ -258,7 +258,7 @@ outerLoop:
 		var splitLink *link
 		var splitIndex int
 	innerLoop:
-		for li, lm := maxInt(ix-1, 0), minInt(ix, len(t.links)-1); li <= lm; li++ {
+		for li, lm := max(ix-1, 0), min(ix, len(t.links)-1); li <= lm; li++ {
 			link := &t.links[li]
 			m := matchingChars(link.keyseg, k)
 			switch {
@@ -313,23 +313,5 @@ func (t *Tree) outputNode(level int) {
 		fmt.Printf("%s  Link %d: ks=\"%s\"\n",
 			strings.Repeat("    ", level), i, l.keyseg)
 		l.tree.outputNode(level + 1)
-	}
-}
-
-func minInt(a, b int) int {
-	switch {
-	case a < b:
-		return a
-	default:
-		return b
-	}
-}
-
-func maxInt(a, b int) int {
-	switch {
-	case a > b:
-		return a
-	default:
-		return b
 	}
 }

@@ -1,11 +1,3 @@
-Release v2.0.0
-==============
-
-**Updates**
-
-* The `Tree` and `KeyValue` types are now generic. Both use a generic value
-  type `V`. This is a breaking change, so a new major release is warranted.
-
 Release v1.0.1
 ==============
 

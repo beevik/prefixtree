@@ -14,7 +14,7 @@ import (
 func ExampleTree_usage() {
 	// Create the tree. Add 5 strings, each with an associated
 	// integer.
-	tree := prefixtree.New[int]()
+	tree := prefixtree.New()
 	for i, s := range []string{
 		"apple",
 		"orange",
@@ -53,19 +53,19 @@ func ExampleTree_usage() {
 	// Output:
 	// prefix             value    error
 	// ------             -----    -----
-	// a                  0        prefixtree: prefix ambiguous
-	// appl               0        prefixtree: prefix ambiguous
+	// a                  <nil>    prefixtree: prefix ambiguous
+	// appl               <nil>    prefixtree: prefix ambiguous
 	// apple              0        <nil>
 	// apple p            2        <nil>
 	// apple pie          2        <nil>
-	// apple pies         0        prefixtree: prefix not found
+	// apple pies         <nil>    prefixtree: prefix not found
 	// o                  1        <nil>
 	// orang              1        <nil>
 	// orange             1        <nil>
-	// oranges            0        prefixtree: prefix not found
-	// lemo               0        prefixtree: prefix ambiguous
+	// oranges            <nil>    prefixtree: prefix not found
+	// lemo               <nil>    prefixtree: prefix ambiguous
 	// lemon              4        <nil>
 	// lemon m            3        <nil>
 	// lemon meringue     3        <nil>
-	// lemon meringues    0        prefixtree: prefix not found
+	// lemon meringues    <nil>    prefixtree: prefix not found
 }

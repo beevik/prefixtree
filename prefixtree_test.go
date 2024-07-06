@@ -13,21 +13,21 @@ import (
 
 type entry struct {
 	key   string
-	value int
+	value any
 }
 
 type testcase struct {
 	key   string
-	value int
+	value any
 	err   error
 }
 
-func test(t *testing.T, entries []entry, cases []testcase) *Tree[int] {
+func test(t *testing.T, entries []entry, cases []testcase) *Tree {
 	// Run 256 iterations of build/find using random tree entry
 	// insertion orders.
-	var tree *Tree[int]
+	var tree *Tree
 	for i := 0; i < 256; i++ {
-		tree = New[int]()
+		tree = New()
 		for _, i := range rand.Perm(len(entries)) {
 			tree.Add(entries[i].key, entries[i].value)
 		}
@@ -189,7 +189,7 @@ func TestFindKeys(t *testing.T) {
 		{"bog", 6},
 	}
 
-	tree := New[int]()
+	tree := New()
 	for _, entry := range entries {
 		tree.Add(entry.key, entry.value)
 	}
@@ -250,7 +250,7 @@ func TestFindValues(t *testing.T) {
 		{"bee", 5},
 	}
 
-	tree := New[int]()
+	tree := New()
 	for _, entry := range entries {
 		tree.Add(entry.key, entry.value)
 	}
@@ -332,10 +332,10 @@ func TestDictionary(t *testing.T) {
 	}
 
 	// Scan all words from the dictionary into the tree.
-	tree := New[bool]()
+	tree := New()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		tree.Add(scanner.Text(), true)
+		tree.Add(scanner.Text(), nil)
 	}
 	file.Close()
 
@@ -382,10 +382,10 @@ func BenchmarkDictionary(b *testing.B) {
 	}
 
 	// Scan all words from the dictionary into the tree.
-	tree := New[bool]()
+	tree := New()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		tree.Add(scanner.Text(), true)
+		tree.Add(scanner.Text(), nil)
 	}
 	file.Close()
 

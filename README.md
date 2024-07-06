@@ -16,7 +16,7 @@ The following code adds strings and associated data (in this case an integer)
 to a prefix tree.
 
 ```go
-tree := prefixtree.New()
+tree := prefixtree.New[int]()
 
 tree.Add("apple", 10)
 tree.Add("orange", 20)
@@ -61,20 +61,20 @@ Output:
 ```
 prefix             value    error
 ------             -----    -----
-a                  <nil>    prefixtree: prefix ambiguous
-appl               <nil>    prefixtree: prefix ambiguous
+a                  0        prefixtree: prefix ambiguous
+appl               0        prefixtree: prefix ambiguous
 apple              10       <nil>
 apple p            30       <nil>
 apple pie          30       <nil>
-apple pies         <nil>    prefixtree: prefix not found
+apple pies         0        prefixtree: prefix not found
 o                  20       <nil>
 orang              20       <nil>
 orange             20       <nil>
-oranges            <nil>    prefixtree: prefix not found
-l                  <nil>    prefixtree: prefix ambiguous
-lemo               <nil>    prefixtree: prefix ambiguous
+oranges            0        prefixtree: prefix not found
+l                  0        prefixtree: prefix ambiguous
+lemo               0        prefixtree: prefix ambiguous
 lemon              40       <nil>
 lemon m            50       <nil>
 lemon meringue     50       <nil>
-pear               <nil>    prefixtree: prefix not found
+pear               0        prefixtree: prefix not found
 ```

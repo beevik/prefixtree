@@ -7,7 +7,7 @@ package prefixtree_test
 import (
 	"fmt"
 
-	"github.com/beevik/prefixtree"
+	"github.com/beevik/prefixtree/v2"
 )
 
 // Build a prefix tree and search it for various prefix matches.

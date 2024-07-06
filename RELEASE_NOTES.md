@@ -1,3 +1,10 @@
+Release v2.0.1
+==============
+
+**Updates**
+
+* Created a `v2` branch for release version 2.
+
 Release v2.0.0
 ==============
 

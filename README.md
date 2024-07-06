@@ -1,4 +1,4 @@
-[![GoDoc](https://godoc.org/github.com/beevik/prefixtree?status.svg)](https://godoc.org/github.com/beevik/prefixtree)
+[![GoDoc](https://godoc.org/github.com/beevik/prefixtree/v2?status.svg)](https://godoc.org/github.com/beevik/prefixtree/v2)
 [![Go](https://github.com/beevik/prefixtree/actions/workflows/go.yml/badge.svg)](https://github.com/beevik/prefixtree/actions/workflows/go.yml)
 
 prefixtree

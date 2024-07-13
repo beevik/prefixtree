@@ -10,6 +10,12 @@ prefix. The implementation allows the user to associate data with each
 string, so it can act as a sort of flexible key-value store where
 searches succeed with the shortest unambiguous key prefix.
 
+This is version 2 of the package, which you can retrieve using `go get`:
+
+```sh
+go get github.com/beevik/prefixtree/v2
+```
+
 ### Example: Building a prefix tree
 
 The following code adds strings and associated data (in this case an integer)
@@ -52,7 +58,7 @@ for _, prefix := range []string{
     "lemon meringue",
     "pear",
 } {
-    value, err := tree.Find(prefix)
+    value, err := tree.FindValue(prefix)
     fmt.Printf("%-18s %-8v %v\n", prefix, value, err)
 }
 ```
@@ -68,7 +74,7 @@ apple p            30       <nil>
 apple pie          30       <nil>
 apple pies         0        prefixtree: prefix not found
 o                  20       <nil>
-orang              20       <nil>
+oran               20       <nil>
 orange             20       <nil>
 oranges            0        prefixtree: prefix not found
 l                  0        prefixtree: prefix ambiguous
